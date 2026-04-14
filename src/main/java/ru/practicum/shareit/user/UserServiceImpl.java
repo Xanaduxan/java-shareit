@@ -1,6 +1,7 @@
 package ru.practicum.shareit.user;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.common.ConflictException;
 import ru.practicum.shareit.common.NotFoundException;
@@ -8,26 +9,39 @@ import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.mapper.UserMapper;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
+    private static final String USER_NOT_FOUND_LOG = "Пользователь с id={} не найден";
+    private static final String EMAIL_CONFLICT_LOG = "Email уже используется: {}";
+    private static final String CREATE_USER_LOG = "Создание пользователя: email={}";
+    private static final String UPDATE_USER_LOG = "Обновление пользователя с id={}";
+    private static final String DELETE_USER_LOG = "Удаление пользователя с id={}";
+
     @Override
     public UserDto create(UserDto userDto) {
-        validateEmail(userDto.getEmail());
+        log.info(CREATE_USER_LOG, userDto.getEmail());
+
+
         checkEmailUnique(userDto.getEmail(), null);
 
         User user = UserMapper.toUser(userDto);
         User createdUser = userRepository.create(user);
+
         return UserMapper.toUserDto(createdUser);
     }
 
     @Override
     public UserDto update(Long userId, UserDto userDto) {
+        log.info(UPDATE_USER_LOG, userId);
+
         User user = getUserOrThrow(userId);
 
         if (userDto.getName() != null) {
@@ -35,7 +49,7 @@ public class UserServiceImpl implements UserService {
         }
 
         if (userDto.getEmail() != null) {
-            validateEmail(userDto.getEmail());
+
             checkEmailUnique(userDto.getEmail(), userId);
             user.setEmail(userDto.getEmail());
         }
@@ -46,18 +60,23 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto getById(Long userId) {
+        log.info("Получение пользователя с id={}", userId);
         return UserMapper.toUserDto(getUserOrThrow(userId));
     }
 
     @Override
     public Collection<UserDto> getAll() {
-        return userRepository.getAll().stream()
-                .map(UserMapper::toUserDto)
-                .collect(Collectors.toList());
+        log.info("Получение всех пользователей");
+        return userRepository.getAll()
+                             .stream()
+                             .map(UserMapper::toUserDto)
+                             .collect(Collectors.toList());
     }
 
     @Override
     public void delete(Long userId) {
+        log.info(DELETE_USER_LOG, userId);
+
         getUserOrThrow(userId);
         userRepository.delete(userId);
     }
@@ -65,28 +84,23 @@ public class UserServiceImpl implements UserService {
     private User getUserOrThrow(Long userId) {
         User user = userRepository.getById(userId);
         if (user == null) {
-            throw new NotFoundException("Пользователь не найден");
+            log.warn(USER_NOT_FOUND_LOG, userId);
+            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
         }
         return user;
     }
 
-    private void validateEmail(String email) {
-        if (email == null || !email.contains("@")) {
-            throw new IllegalArgumentException("Некорректный email");
-        }
-    }
 
     private void checkEmailUnique(String email, Long currentUserId) {
         for (User user : userRepository.getAll()) {
-            if (user.getEmail() == null || !user.getEmail().equals(email)) {
+            if (user.getEmail() == null || !user.getEmail()
+                                                .equals(email)) {
                 continue;
             }
 
-            if (currentUserId == null) {
-                throw new ConflictException("Email уже используется");
-            }
+            log.warn(EMAIL_CONFLICT_LOG, email);
 
-            if (!user.getId().equals(currentUserId)) {
+            if (currentUserId == null || !Objects.equals(user.getId(), currentUserId)) {
                 throw new ConflictException("Email уже используется");
             }
         }

@@ -44,12 +44,14 @@ public class UserServiceImpl implements UserService {
 
         User user = getUserOrThrow(userId);
 
-        if (userDto.getName() != null) {
+        if (userDto.getName() != null && !userDto.getName()
+                                                 .isBlank()) {
             user.setName(userDto.getName());
         }
 
-        if (userDto.getEmail() != null) {
-
+        if (userDto.getEmail() != null && !userDto.getEmail()
+                                                  .isBlank()) {
+            validateEmail(userDto.getEmail());
             checkEmailUnique(userDto.getEmail(), userId);
             user.setEmail(userDto.getEmail());
         }
@@ -103,6 +105,12 @@ public class UserServiceImpl implements UserService {
             if (currentUserId == null || !Objects.equals(user.getId(), currentUserId)) {
                 throw new ConflictException("Email уже используется");
             }
+        }
+    }
+
+    private void validateEmail(String email) {
+        if (email == null || email.isBlank() || !email.contains("@")) {
+            throw new IllegalArgumentException("Некорректный email");
         }
     }
 }

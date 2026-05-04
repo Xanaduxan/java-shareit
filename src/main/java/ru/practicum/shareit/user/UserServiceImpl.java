@@ -2,11 +2,13 @@ package ru.practicum.shareit.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.common.ConflictException;
 import ru.practicum.shareit.common.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.mapper.UserMapper;
+import ru.practicum.shareit.user.model.User;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -29,13 +31,17 @@ public class UserServiceImpl implements UserService {
     public UserDto create(UserDto userDto) {
         log.info(CREATE_USER_LOG, userDto.getEmail());
 
-
         checkEmailUnique(userDto.getEmail(), null);
 
         User user = UserMapper.toUser(userDto);
-        User createdUser = userRepository.create(user);
 
-        return UserMapper.toUserDto(createdUser);
+        try {
+            User createdUser = userRepository.save(user);
+            return UserMapper.toUserDto(createdUser);
+        } catch (DataIntegrityViolationException e) {
+            log.warn(EMAIL_CONFLICT_LOG, userDto.getEmail());
+            throw new ConflictException("Email уже используется");
+        }
     }
 
     @Override
@@ -56,8 +62,13 @@ public class UserServiceImpl implements UserService {
             user.setEmail(userDto.getEmail());
         }
 
-        User updatedUser = userRepository.update(user);
-        return UserMapper.toUserDto(updatedUser);
+        try {
+            User updatedUser = userRepository.save(user);
+            return UserMapper.toUserDto(updatedUser);
+        } catch (DataIntegrityViolationException e) {
+            log.warn(EMAIL_CONFLICT_LOG, userDto.getEmail());
+            throw new ConflictException("Email уже используется");
+        }
     }
 
     @Override
@@ -69,7 +80,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Collection<UserDto> getAll() {
         log.info("Получение всех пользователей");
-        return userRepository.getAll()
+        return userRepository.findAll()
                              .stream()
                              .map(UserMapper::toUserDto)
                              .collect(Collectors.toList());
@@ -80,29 +91,26 @@ public class UserServiceImpl implements UserService {
         log.info(DELETE_USER_LOG, userId);
 
         getUserOrThrow(userId);
-        userRepository.delete(userId);
+        userRepository.deleteById(userId);
     }
 
     private User getUserOrThrow(Long userId) {
-        User user = userRepository.getById(userId);
-        if (user == null) {
-            log.warn(USER_NOT_FOUND_LOG, userId);
-            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
-        }
-        return user;
+        return userRepository.findById(userId)
+                             .orElseThrow(() -> {
+                                 log.warn(USER_NOT_FOUND_LOG, userId);
+                                 return new NotFoundException("Пользователь с id=" + userId + " не найден");
+                             });
     }
 
-
     private void checkEmailUnique(String email, Long currentUserId) {
-        for (User user : userRepository.getAll()) {
+        for (User user : userRepository.findAll()) {
             if (user.getEmail() == null || !user.getEmail()
                                                 .equals(email)) {
                 continue;
             }
 
-            log.warn(EMAIL_CONFLICT_LOG, email);
-
             if (currentUserId == null || !Objects.equals(user.getId(), currentUserId)) {
+                log.warn(EMAIL_CONFLICT_LOG, email);
                 throw new ConflictException("Email уже используется");
             }
         }

@@ -30,4 +30,13 @@ public class BookingMapper {
 
         return dto;
     }
+
+    public static Booking toBooking(BookingDto dto) {
+        Booking booking = new Booking();
+
+        booking.setStart(dto.getStart());
+        booking.setEnd(dto.getEnd());
+
+        return booking;
+    }
 }

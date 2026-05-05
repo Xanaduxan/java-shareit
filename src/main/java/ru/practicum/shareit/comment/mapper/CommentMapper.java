@@ -19,4 +19,10 @@ public class CommentMapper {
 
         return dto;
     }
+
+    public static Comment toComment(CommentDto dto) {
+        Comment comment = new Comment();
+        comment.setText(dto.getText());
+        return comment;
+    }
 }

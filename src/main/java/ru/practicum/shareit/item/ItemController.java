@@ -46,10 +46,11 @@ public class ItemController {
         return itemService.search(text);
     }
 
+
     @PostMapping("/{itemId}/comment")
     public CommentDto addComment(@RequestHeader(USER_ID_HEADER) Long userId,
                                  @PathVariable Long itemId,
-                                 @RequestBody CommentDto commentDto) {
+                                 @Valid @RequestBody CommentDto commentDto) {
         return itemService.addComment(userId, itemId, commentDto);
     }
 }

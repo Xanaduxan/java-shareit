@@ -44,21 +44,19 @@ public class BookingServiceImpl implements BookingService {
             throw new IllegalArgumentException("Вещь недоступна");
         }
 
-        if (bookingDto.getStart() == null || bookingDto.getEnd() == null ||
-                !bookingDto.getEnd()
-                           .isAfter(bookingDto.getStart())) {
-            throw new IllegalArgumentException("Некорректные даты");
+        if (!bookingDto.getEnd()
+                       .isAfter(bookingDto.getStart())) {
+            throw new IllegalArgumentException("Дата окончания должна быть позже даты начала");
         }
 
-        Booking booking = new Booking();
-        booking.setStart(bookingDto.getStart());
-        booking.setEnd(bookingDto.getEnd());
+        Booking booking = BookingMapper.toBooking(bookingDto);
         booking.setItem(item);
         booking.setBooker(booker);
         booking.setStatus(BookingStatus.WAITING);
 
         return BookingMapper.toBookingDto(bookingRepository.save(booking));
     }
+
 
     @Override
     @Transactional
@@ -71,7 +69,9 @@ public class BookingServiceImpl implements BookingService {
                     .equals(userId)) {
             throw new ForbiddenException("Подтверждать может только владелец");
         }
-
+        if (!BookingStatus.WAITING.equals(booking.getStatus())) {
+            throw new IllegalArgumentException("Можно изменить только бронирование в статусе WAITING");
+        }
         booking.setStatus(Boolean.TRUE.equals(approved)
                 ? BookingStatus.APPROVED
                 : BookingStatus.REJECTED);
@@ -142,16 +142,17 @@ public class BookingServiceImpl implements BookingService {
 
     private User getUserOrThrow(Long userId) {
         return userRepository.findById(userId)
-                             .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+                             .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
     }
 
     private Item getItemOrThrow(Long itemId) {
         return itemRepository.findById(itemId)
-                             .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
+                             .orElseThrow(() -> new NotFoundException("Вещь с id=" + itemId + " не найдена"));
     }
 
     private Booking getBookingOrThrow(Long bookingId) {
         return bookingRepository.findById(bookingId)
-                                .orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
+                                .orElseThrow(
+                                        () -> new NotFoundException("Бронирование с id=" + bookingId + " не найдено"));
     }
 }

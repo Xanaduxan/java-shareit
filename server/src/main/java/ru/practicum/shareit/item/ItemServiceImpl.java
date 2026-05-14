@@ -38,6 +38,7 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRequestRepository itemRequestRepository;
 
     @Override
+    @Transactional
     public ItemDto create(Long userId, ItemDto itemDto) {
         User owner = getUserOrThrow(userId);
 
@@ -55,6 +56,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional
     public ItemDto update(Long userId, Long itemId, ItemDto itemDto) {
         getUserOrThrow(userId);
         Item item = getItemOrThrow(itemId);

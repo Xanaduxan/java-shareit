@@ -31,13 +31,11 @@ class UserDtoJsonTest {
 
     @Test
     void testDeserialize() throws Exception {
-        String content = """
-                {
-                  "id": 1,
-                  "name": "Иван",
-                  "email": "ivan@mail.com"
-                }
-                """;
+        String content = "{"
+                + "\"id\": 1,"
+                + "\"name\": \"Иван\","
+                + "\"email\": \"ivan@mail.com\""
+                + "}";
 
         UserDto result = json.parseObject(content);
 

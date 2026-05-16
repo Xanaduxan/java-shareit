@@ -96,13 +96,13 @@ class ItemRequestServiceImplTest {
         assertEquals(1, result.getItems()
                               .size());
         assertEquals(100L, result.getItems()
-                                 .get(0)
+                                 .getFirst()
                                  .getId());
         assertEquals("Book", result.getItems()
-                                   .get(0)
+                                   .getFirst()
                                    .getName());
         assertEquals(2L, result.getItems()
-                               .get(0)
+                               .getFirst()
                                .getOwnerId());
 
         verify(userRepository).findById(2L);

@@ -200,14 +200,6 @@ class ItemServiceImplTest {
         verify(itemRepository).search("дрель");
     }
 
-    @Test
-    void search_shouldReturnEmptyList_whenTextIsBlank() {
-        Collection<ItemDto> result = itemService.search(" ");
-
-        assertTrue(result.isEmpty());
-
-        verify(itemRepository, never()).search(anyString());
-    }
 
     @Test
     void addComment_shouldSaveComment_whenUserHasCompletedBooking() {

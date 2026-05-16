@@ -151,10 +151,6 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Collection<ItemDto> search(String text) {
-        if (text == null || text.isBlank()) {
-            return List.of();
-        }
-
         return itemRepository.search(text)
                              .stream()
                              .map(ItemMapper::toItemDto)

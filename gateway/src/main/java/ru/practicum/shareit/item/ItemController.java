@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.comment.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 
+import java.util.List;
+
 @RestController
 @RequestMapping(path = "/items")
 @RequiredArgsConstructor
@@ -51,9 +53,11 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Object> search(
-            @RequestParam String text
-    ) {
+    public ResponseEntity<Object> search(@RequestParam String text) {
+        if (text.isBlank()) {
+            return ResponseEntity.ok(List.of());
+        }
+
         return itemClient.search(text);
     }
 

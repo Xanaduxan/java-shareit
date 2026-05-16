@@ -12,6 +12,8 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     List<Item> findByRequestId(Long requestId);
 
+    List<Item> findByRequestIdIn(List<Long> requestIds);
+
     @Query("select i from Item i " +
             "where i.available = true " +
             "and (" +

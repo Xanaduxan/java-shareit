@@ -6,9 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.common.NotFoundException;
-
 import ru.practicum.shareit.item.ItemRepository;
-
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.model.ItemRequest;
@@ -85,7 +83,7 @@ class ItemRequestServiceImplTest {
         User owner = makeUser(2L, "Owner", "owner@mail.com");
 
         ItemRequest request = makeRequest(10L, "Need book", requestor, LocalDateTime.now());
-        Item item = makeItem(100L, "Book", owner);
+        Item item = makeItem(100L, "Book", owner, 10L);
 
         when(userRepository.findById(2L)).thenReturn(Optional.of(owner));
         when(itemRequestRepository.findById(10L)).thenReturn(Optional.of(request));
@@ -148,8 +146,7 @@ class ItemRequestServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(itemRequestRepository.findByRequestor_IdOrderByCreatedDesc(1L))
                 .thenReturn(List.of(firstRequest, secondRequest));
-        when(itemRepository.findByRequestId(10L)).thenReturn(List.of());
-        when(itemRepository.findByRequestId(11L)).thenReturn(List.of());
+        when(itemRepository.findByRequestIdIn(List.of(10L, 11L))).thenReturn(List.of());
 
         Collection<ItemRequestDto> result = itemRequestService.getMyRequests(1L);
 
@@ -157,8 +154,9 @@ class ItemRequestServiceImplTest {
 
         verify(userRepository).findById(1L);
         verify(itemRequestRepository).findByRequestor_IdOrderByCreatedDesc(1L);
-        verify(itemRepository).findByRequestId(10L);
-        verify(itemRepository).findByRequestId(11L);
+        verify(itemRepository).findByRequestIdIn(List.of(10L, 11L));
+        verify(itemRepository, never()).findByRequestId(10L);
+        verify(itemRepository, never()).findByRequestId(11L);
     }
 
     @Test
@@ -181,7 +179,7 @@ class ItemRequestServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(currentUser));
         when(itemRequestRepository.findByRequestor_IdNotOrderByCreatedDesc(1L))
                 .thenReturn(List.of(request));
-        when(itemRepository.findByRequestId(10L)).thenReturn(List.of());
+        when(itemRepository.findByRequestIdIn(List.of(10L))).thenReturn(List.of());
 
         Collection<ItemRequestDto> result = itemRequestService.getAllRequests(1L);
 
@@ -189,7 +187,8 @@ class ItemRequestServiceImplTest {
 
         verify(userRepository).findById(1L);
         verify(itemRequestRepository).findByRequestor_IdNotOrderByCreatedDesc(1L);
-        verify(itemRepository).findByRequestId(10L);
+        verify(itemRepository).findByRequestIdIn(List.of(10L));
+        verify(itemRepository, never()).findByRequestId(10L);
     }
 
     @Test
@@ -219,11 +218,12 @@ class ItemRequestServiceImplTest {
         return request;
     }
 
-    private Item makeItem(Long id, String name, User owner) {
+    private Item makeItem(Long id, String name, User owner, Long requestId) {
         Item item = new Item();
         item.setId(id);
         item.setName(name);
         item.setOwner(owner);
+        item.setRequestId(requestId);
         return item;
     }
 }

@@ -1,17 +1,14 @@
 package ru.practicum.shareit.booking;
 
-import org.springframework.http.ResponseEntity;
-
-import org.springframework.stereotype.Controller;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookItemRequestDto;
 import ru.practicum.shareit.booking.dto.BookingState;
-
 
 @Controller
 @RequestMapping(path = "/bookings")
@@ -39,6 +36,11 @@ public class BookingController {
             @RequestHeader("X-Sharer-User-Id") long userId,
             @RequestBody @Valid BookItemRequestDto requestDto
     ) {
+        if (!requestDto.getEnd()
+                       .isAfter(requestDto.getStart())) {
+            throw new IllegalArgumentException("Дата окончания должна быть позже даты начала");
+        }
+
         return bookingClient.bookItem(userId, requestDto);
     }
 

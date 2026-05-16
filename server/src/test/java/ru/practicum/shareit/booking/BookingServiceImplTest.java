@@ -156,27 +156,6 @@ class BookingServiceImplTest {
         verify(bookingRepository, never()).save(any());
     }
 
-    @Test
-    void create_shouldThrowIllegalArgumentException_whenEndIsBeforeStart() {
-        User owner = makeUser(1L);
-        User booker = makeUser(2L);
-        Item item = makeItem(10L, "Drill", true, owner);
-
-        BookingDto dto = makeBookingDto(
-                10L,
-                LocalDateTime.now()
-                             .plusHours(2),
-                LocalDateTime.now()
-                             .plusHours(1)
-        );
-
-        when(userRepository.findById(2L)).thenReturn(Optional.of(booker));
-        when(itemRepository.findById(10L)).thenReturn(Optional.of(item));
-
-        assertThrows(IllegalArgumentException.class, () -> bookingService.create(2L, dto));
-
-        verify(bookingRepository, never()).save(any());
-    }
 
     @Test
     void approve_shouldApproveBooking_whenUserIsOwner() {

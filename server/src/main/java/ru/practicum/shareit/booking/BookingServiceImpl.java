@@ -43,12 +43,7 @@ public class BookingServiceImpl implements BookingService {
         if (!Boolean.TRUE.equals(item.getAvailable())) {
             throw new IllegalArgumentException("Вещь недоступна");
         }
-
-        if (!bookingDto.getEnd()
-                       .isAfter(bookingDto.getStart())) {
-            throw new IllegalArgumentException("Дата окончания должна быть позже даты начала");
-        }
-
+        
         Booking booking = BookingMapper.toBooking(bookingDto);
         booking.setItem(item);
         booking.setBooker(booker);
@@ -72,9 +67,7 @@ public class BookingServiceImpl implements BookingService {
         if (!BookingStatus.WAITING.equals(booking.getStatus())) {
             throw new IllegalArgumentException("Можно изменить только бронирование в статусе WAITING");
         }
-        booking.setStatus(Boolean.TRUE.equals(approved)
-                ? BookingStatus.APPROVED
-                : BookingStatus.REJECTED);
+        booking.setStatus(Boolean.TRUE.equals(approved) ? BookingStatus.APPROVED : BookingStatus.REJECTED);
 
         return BookingMapper.toBookingDto(bookingRepository.save(booking));
     }
@@ -87,11 +80,10 @@ public class BookingServiceImpl implements BookingService {
 
         if (!booking.getBooker()
                     .getId()
-                    .equals(userId) &&
-                !booking.getItem()
-                        .getOwner()
-                        .getId()
-                        .equals(userId)) {
+                    .equals(userId) && !booking.getItem()
+                                               .getOwner()
+                                               .getId()
+                                               .equals(userId)) {
             throw new NotFoundException("Нет доступа");
         }
 

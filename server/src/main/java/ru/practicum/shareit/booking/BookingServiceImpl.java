@@ -52,7 +52,6 @@ public class BookingServiceImpl implements BookingService {
         return BookingMapper.toBookingDto(bookingRepository.save(booking));
     }
 
-
     @Override
     @Transactional
     public BookingDto approve(Long userId, Long bookingId, Boolean approved) {
@@ -64,9 +63,11 @@ public class BookingServiceImpl implements BookingService {
                     .equals(userId)) {
             throw new ForbiddenException("Подтверждать может только владелец");
         }
+
         if (!BookingStatus.WAITING.equals(booking.getStatus())) {
             throw new IllegalArgumentException("Можно изменить только бронирование в статусе WAITING");
         }
+
         booking.setStatus(Boolean.TRUE.equals(approved) ? BookingStatus.APPROVED : BookingStatus.REJECTED);
 
         return BookingMapper.toBookingDto(bookingRepository.save(booking));
@@ -80,10 +81,11 @@ public class BookingServiceImpl implements BookingService {
 
         if (!booking.getBooker()
                     .getId()
-                    .equals(userId) && !booking.getItem()
-                                               .getOwner()
-                                               .getId()
-                                               .equals(userId)) {
+                    .equals(userId)
+                && !booking.getItem()
+                           .getOwner()
+                           .getId()
+                           .equals(userId)) {
             throw new NotFoundException("Нет доступа");
         }
 
